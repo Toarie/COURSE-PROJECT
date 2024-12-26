@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "transaction_analysis"
+name = "git checkout transaction_analysis git push origin transaction_analysis"
 version = "0.1.0"
 description = ""
 authors = ["Ulyana Kuznetsova <rey.tsvetkov777@gmail.com>"]
