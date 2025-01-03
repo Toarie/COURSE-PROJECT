@@ -14,8 +14,8 @@ def profitable_cashback_categories(data: pd.DataFrame, year: int, month: int) ->
     Возвращает:
         str: JSON-ответ с анализом кешбэка.
     """
-    start_date = datetime(year, month, 1)
-    end_date = (start_date + pd.DateOffset(months=1)) - pd.Timedelta(days=1)
+    start_date = pd.to_datetime(f'{year}-{month}-01')
+    end_date = start_date + pd.DateOffset(months=1) - pd.Timedelta(days=1)
     filtered_transactions = data[(data['Дата операции'] >= start_date) & (data['Дата операции'] <= end_date)]
 
     cashback_analysis = filtered_transactions.groupby('Категория')['Сумма операции'].sum() * 0.01

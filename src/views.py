@@ -83,8 +83,8 @@ def get_cards_data(transactions: pd.DataFrame) -> list:
         cashback = total_spent * 0.01
         cards_data.append({
             "last_digits": card,
-            "total_spent": total_spent,
-            "cashback": cashback
+            "total_spent": float(total_spent),
+            "cashback": float(cashback)
         })
     return cards_data
 
@@ -191,3 +191,4 @@ def get_income(transactions: pd.DataFrame) -> dict:
         "total_amount": total_amount,
         "main": main_categories.to_dict()
     }
+
