@@ -1,9 +1,10 @@
 import json
 import pandas as pd
 from datetime import datetime
-from src.utils import load_transactions, get_currency_rates, get_stock_prices
+from django.http import JsonResponse
+from src.utils import load_transactions, get_currency_rates, get_stock_prices, load_user_settings
 
-def home_page(date_str: str) -> str:
+def home_page(date_str: str) -> JsonResponse:
     """
     Генерирует JSON-ответ для главной страницы.
 
@@ -11,10 +12,13 @@ def home_page(date_str: str) -> str:
         date_str (str): Дата и время в формате 'YYYY-MM-DD HH:MM:SS'.
 
     Возвращает:
-        str: JSON-ответ.
+        JsonResponse: JSON-ответ.
     """
     date = datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S')
     transactions = load_transactions()
+
+    # Преобразуем столбец 'Дата операции' в datetime
+    transactions['Дата операции'] = pd.to_datetime(transactions['Дата операции'])
 
     # Фильтруем транзакции за текущий месяц
     start_date = date.replace(day=1)
@@ -30,10 +34,13 @@ def home_page(date_str: str) -> str:
     top_transactions = get_top_transactions(filtered_transactions)
 
     # Курсы валют
-    currency_rates = get_currency_rates()
+    user_settings = load_user_settings()
+    user_currencies = user_settings.get('user_currencies', [])
+    currency_rates = get_currency_rates(user_currencies)
 
     # Цены на акции
-    stock_prices = get_stock_prices()
+    user_stocks = user_settings.get('user_stocks', [])
+    stock_prices = get_stock_prices(user_stocks)
 
     response = {
         "greeting": greeting,
@@ -43,7 +50,7 @@ def home_page(date_str: str) -> str:
         "stock_prices": stock_prices
     }
 
-    return json.dumps(response, ensure_ascii=False, indent=4)
+    return JsonResponse(response, ensure_ascii=False, safe=False, json_dumps_params={'indent': 4})
 
 def get_greeting(date: datetime) -> str:
     """
@@ -101,7 +108,7 @@ def get_top_transactions(transactions: pd.DataFrame) -> list:
     top_transactions = transactions.nlargest(5, 'Сумма операции')
     return top_transactions[['Дата операции', 'Сумма операции', 'Категория', 'Описание']].to_dict(orient='records')
 
-def events_page(date_str: str, period: str = 'M') -> str:
+def events_page(date_str: str, period: str = 'M') -> JsonResponse:
     """
     Генерирует JSON-ответ для страницы событий.
 
@@ -110,10 +117,13 @@ def events_page(date_str: str, period: str = 'M') -> str:
         period (str): Период для фильтрации данных ('W', 'M', 'Y', 'ALL').
 
     Возвращает:
-        str: JSON-ответ.
+        JsonResponse: JSON-ответ.
     """
     date = datetime.strptime(date_str, '%Y-%m-%d')
     transactions = load_transactions()
+
+    # Преобразуем столбец 'Дата операции' в datetime
+    transactions['Дата операции'] = pd.to_datetime(transactions['Дата операции'])
 
     # Фильтруем транзакции на основе периода
     if period == 'W':
@@ -136,10 +146,13 @@ def events_page(date_str: str, period: str = 'M') -> str:
     income = get_income(filtered_transactions)
 
     # Курсы валют
-    currency_rates = get_currency_rates()
+    user_settings = load_user_settings()
+    user_currencies = user_settings.get('user_currencies', [])
+    currency_rates = get_currency_rates(user_currencies)
 
     # Цены на акции
-    stock_prices = get_stock_prices()
+    user_stocks = user_settings.get('user_stocks', [])
+    stock_prices = get_stock_prices(user_stocks)
 
     response = {
         "expenses": expenses,
@@ -148,7 +161,7 @@ def events_page(date_str: str, period: str = 'M') -> str:
         "stock_prices": stock_prices
     }
 
-    return json.dumps(response, ensure_ascii=False, indent=4)
+    return JsonResponse(response, ensure_ascii=False, safe=False, json_dumps_params={'indent': 4})
 
 def get_expenses(transactions: pd.DataFrame) -> dict:
     """
@@ -191,4 +204,3 @@ def get_income(transactions: pd.DataFrame) -> dict:
         "total_amount": total_amount,
         "main": main_categories.to_dict()
     }
-
