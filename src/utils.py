@@ -28,8 +28,8 @@ def load_transactions(file_path: str) -> pd.DataFrame:
         pd.DataFrame: DataFrame с транзакциями.
     """
     transactions = pd.read_excel(file_path)
-    transactions['Дата операции'] = pd.to_datetime(transactions['Дата операции'])
-    transactions['Дата платежа'] = pd.to_datetime(transactions['Дата платежа'])
+    transactions['Дата операции'] = pd.to_datetime(transactions['Дата операции'], format='%Y-%m-%d %H:%M:%S')
+    transactions['Дата платежа'] = pd.to_datetime(transactions['Дата платежа'], format='%Y-%m-%d %H:%M:%S')
     return transactions
 
 def get_currency_rates(currencies: list) -> dict:
