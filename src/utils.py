@@ -28,8 +28,8 @@ def load_transactions(file_path: str) -> pd.DataFrame:
         pd.DataFrame: DataFrame с транзакциями.
     """
     transactions = pd.read_excel(file_path)
-    transactions['Дата операции'] = pd.to_datetime(transactions['Дата операции'], format='%Y-%m-%d %H:%M:%S')
-    transactions['Дата платежа'] = pd.to_datetime(transactions['Дата платежа'], format='%Y-%m-%d %H:%M:%S')
+    transactions['Дата операции'] = pd.to_datetime(transactions['Дата операции'], dayfirst=True)
+    transactions['Дата платежа'] = pd.to_datetime(transactions['Дата платежа'], dayfirst=True)
     return transactions
 
 def get_currency_rates(currencies: list) -> dict:
@@ -42,9 +42,12 @@ def get_currency_rates(currencies: list) -> dict:
     Возвращает:
         dict: Курсы валют.
     """
-    response = requests.get('https://api.exchangerate-api.com/v4/latest/RUB')
-    data = response.json()
-    rates = {currency: data['rates'].get(currency, 1.0) for currency in currencies}
+    rates = {}
+    for currency in currencies:
+        response = requests.get(f'https://api.exchangerate-api.com/v4/latest/{currency}')
+        if response.status_code == 200:
+            data = response.json()
+            rates[currency] = data['rates']['RUB']
     return rates
 
 def get_stock_prices(stocks: list) -> dict:
@@ -61,21 +64,11 @@ def get_stock_prices(stocks: list) -> dict:
     base_url = os.getenv('STOCK_API_URL')
     stock_prices = {}
     for stock in stocks:
-        response = requests.get(f'{base_url}/price?symbol={stock}&apikey={api_key}')
-        data = response.json()
-        stock_prices[stock] = data.get('price', 100.0)
+        response = requests.get(f'{base_url}?function=TIME_SERIES_INTRADAY&symbol={stock}&interval=1min&apikey={api_key}')
+        if response.status_code == 200:
+            data = response.json()
+            time_series = data.get('Time Series (1min)', {})
+            if time_series:
+                latest_time = sorted(time_series.keys())[0]
+                stock_prices[stock] = float(time_series[latest_time]['1. open'])
     return stock_prices
-
-# Пример использования
-user_settings = load_user_settings('user_settings.json')
-transactions = load_transactions('data/operations.xlsx')
-currency_rates = get_currency_rates(user_settings['user_currencies'])
-stock_prices = get_stock_prices(user_settings['user_stocks'])
-
-# Вывод результатов
-print("Transactions:")
-print(transactions.head())
-print("\nCurrency Rates:")
-print(currency_rates)
-print("\nStock Prices:")
-print(stock_prices)

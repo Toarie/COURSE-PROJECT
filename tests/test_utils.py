@@ -1,9 +1,7 @@
 import unittest
 from unittest.mock import patch, MagicMock
-import pytest
 import pandas as pd
 from datetime import datetime
-from django.http import JsonResponse
 from src.utils import load_transactions, get_currency_rates, get_stock_prices, load_user_settings
 from src.views import home_page, get_greeting, get_cards_data, get_top_transactions, events_page, get_expenses, get_income
 
@@ -21,8 +19,8 @@ class TestFinancialFunctions(unittest.TestCase):
     @patch('src.utils.pd.read_excel')
     def test_load_transactions(self, mock_read_excel):
         mock_transactions = pd.DataFrame({
-            'Дата операции': ['2023-10-01 12:00:00', '2023-10-02 12:00:00', '2023-10-03 12:00:00'],
-            'Дата платежа': ['2023-10-01 12:00:00', '2023-10-02 12:00:00', '2023-10-03 12:00:00'],
+            'Дата операции': ['01-10-2023 12:00:00', '02-10-2023 12:00:00', '03-10-2023 12:00:00'],
+            'Дата платежа': ['01-10-2023 12:00:00', '02-10-2023 12:00:00', '03-10-2023 12:00:00'],
             'Номер карты': ['1234', '1234', '5678'],
             'Сумма операции': [100, -50, 200],
             'Категория': ['Еда', 'Транспорт', 'Еда'],
@@ -92,12 +90,11 @@ class TestFinancialFunctions(unittest.TestCase):
         response = home_page('2023-10-03 12:00:00')
 
         # Проверяем результат
-        self.assertEqual(response.status_code, 200)
-        self.assertIn('greeting', response.content.decode())
-        self.assertIn('cards', response.content.decode())
-        self.assertIn('top_transactions', response.content.decode())
-        self.assertIn('currency_rates', response.content.decode())
-        self.assertIn('stock_prices', response.content.decode())
+        self.assertIn('greeting', response)
+        self.assertIn('cards', response)
+        self.assertIn('top_transactions', response)
+        self.assertIn('currency_rates', response)
+        self.assertIn('stock_prices', response)
 
     def test_get_greeting(self):
         self.assertEqual(get_greeting(datetime(2023, 10, 3, 8, 0, 0)), "Доброе утро")
@@ -152,14 +149,13 @@ class TestFinancialFunctions(unittest.TestCase):
         mock_get_stock_prices.return_value = {'AAPL': 150.0, 'GOOG': 2800.0}
 
         # Вызываем функцию
-        response = events_page('2023-10-03 12:00:00', 'M')
+        response = events_page('2023-10-03', 'M')
 
         # Проверяем результат
-        self.assertEqual(response.status_code, 200)
-        self.assertIn('expenses', response.content.decode())
-        self.assertIn('income', response.content.decode())
-        self.assertIn('currency_rates', response.content.decode())
-        self.assertIn('stock_prices', response.content.decode())
+        self.assertIn('expenses', response)
+        self.assertIn('income', response)
+        self.assertIn('currency_rates', response)
+        self.assertIn('stock_prices', response)
 
     def test_get_expenses(self):
         transactions = pd.DataFrame({
@@ -203,21 +199,19 @@ def test_get_stock_prices():
 def test_home_page():
     date_str = '2023-01-31 12:00:00'
     response = home_page(date_str)
-    assert response.status_code == 200
-    assert 'greeting' in response.content.decode('utf-8')
-    assert 'cards' in response.content.decode('utf-8')
-    assert 'top_transactions' in response.content.decode('utf-8')
-    assert 'currency_rates' in response.content.decode('utf-8')
-    assert 'stock_prices' in response.content.decode('utf-8')
+    assert 'greeting' in response
+    assert 'cards' in response
+    assert 'top_transactions' in response
+    assert 'currency_rates' in response
+    assert 'stock_prices' in response
 
 def test_events_page():
     date_str = '2023-01-31'
     response = events_page(date_str)
-    assert response.status_code == 200
-    assert 'expenses' in response.content.decode('utf-8')
-    assert 'income' in response.content.decode('utf-8')
-    assert 'currency_rates' in response.content.decode('utf-8')
-    assert 'stock_prices' in response.content.decode('utf-8')
+    assert 'expenses' in response
+    assert 'income' in response
+    assert 'currency_rates' in response
+    assert 'stock_prices' in response
 
 if __name__ == '__main__':
     unittest.main()

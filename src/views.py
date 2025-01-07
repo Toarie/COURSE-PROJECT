@@ -1,10 +1,10 @@
 import json
 import pandas as pd
 from datetime import datetime
-from django.http import JsonResponse
+from django.http import HttpResponse
 from src.utils import load_transactions, get_currency_rates, get_stock_prices, load_user_settings
 
-def home_page(date_str: str) -> JsonResponse:
+def home_page(date_str: str) -> HttpResponse:
     """
     Генерирует JSON-ответ для главной страницы.
 
@@ -12,7 +12,7 @@ def home_page(date_str: str) -> JsonResponse:
         date_str (str): Дата и время в формате 'YYYY-MM-DD HH:MM:SS'.
 
     Возвращает:
-        JsonResponse: JSON-ответ.
+        HttpResponse: JSON-ответ.
     """
     date = datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S')
     transactions = load_transactions('operations.xlsx')
@@ -50,7 +50,8 @@ def home_page(date_str: str) -> JsonResponse:
         "stock_prices": stock_prices
     }
 
-    return JsonResponse(response, ensure_ascii=False, safe=False, json_dumps_params={'indent': 4})
+    json_response = json.dumps(response, ensure_ascii=False, indent=4)
+    return HttpResponse(json_response, content_type='application/json')
 
 def get_greeting(date: datetime) -> str:
     """
@@ -108,7 +109,7 @@ def get_top_transactions(transactions: pd.DataFrame) -> list:
     top_transactions = transactions.nlargest(5, 'Сумма операции')
     return top_transactions[['Дата операции', 'Сумма операции', 'Категория', 'Описание']].to_dict(orient='records')
 
-def events_page(date_str: str, period: str = 'M') -> JsonResponse:
+def events_page(date_str: str, period: str = 'M') -> HttpResponse:
     """
     Генерирует JSON-ответ для страницы событий.
 
@@ -117,7 +118,7 @@ def events_page(date_str: str, period: str = 'M') -> JsonResponse:
         period (str): Период для фильтрации данных ('W', 'M', 'Y', 'ALL').
 
     Возвращает:
-        JsonResponse: JSON-ответ.
+        HttpResponse: JSON-ответ.
     """
     date = datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S')
     transactions = load_transactions('operations.xlsx')
@@ -161,7 +162,8 @@ def events_page(date_str: str, period: str = 'M') -> JsonResponse:
         "stock_prices": stock_prices
     }
 
-    return JsonResponse(response, ensure_ascii=False, safe=False, json_dumps_params={'indent': 4})
+    json_response = json.dumps(response, ensure_ascii=False, indent=4)
+    return HttpResponse(json_response, content_type='application/json')
 
 def get_expenses(transactions: pd.DataFrame) -> dict:
     """
@@ -204,4 +206,5 @@ def get_income(transactions: pd.DataFrame) -> dict:
         "total_amount": total_amount,
         "main": main_categories.to_dict()
     }
+
 
