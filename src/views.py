@@ -1,10 +1,9 @@
 import json
 import pandas as pd
 from datetime import datetime
-from django.http import HttpResponse
 from src.utils import load_transactions, get_currency_rates, get_stock_prices, load_user_settings
 
-def home_page(date_str: str) -> HttpResponse:
+def home_page(date_str: str) -> str:
     """
     Генерирует JSON-ответ для главной страницы.
 
@@ -12,13 +11,10 @@ def home_page(date_str: str) -> HttpResponse:
         date_str (str): Дата и время в формате 'YYYY-MM-DD HH:MM:SS'.
 
     Возвращает:
-        HttpResponse: JSON-ответ.
+        str: JSON-ответ.
     """
     date = datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S')
     transactions = load_transactions('operations.xlsx')
-
-    # Преобразуем столбец 'Дата операции' в datetime
-    transactions['Дата операции'] = pd.to_datetime(transactions['Дата операции'])
 
     # Фильтруем транзакции за текущий месяц
     start_date = date.replace(day=1, hour=0, minute=0, second=0)
@@ -50,8 +46,7 @@ def home_page(date_str: str) -> HttpResponse:
         "stock_prices": stock_prices
     }
 
-    json_response = json.dumps(response, ensure_ascii=False, indent=4)
-    return HttpResponse(json_response, content_type='application/json')
+    return json.dumps(response, ensure_ascii=False, indent=4)
 
 def get_greeting(date: datetime) -> str:
     """
@@ -109,22 +104,19 @@ def get_top_transactions(transactions: pd.DataFrame) -> list:
     top_transactions = transactions.nlargest(5, 'Сумма операции')
     return top_transactions[['Дата операции', 'Сумма операции', 'Категория', 'Описание']].to_dict(orient='records')
 
-def events_page(date_str: str, period: str = 'M') -> HttpResponse:
+def events_page(date_str: str, period: str = 'M') -> str:
     """
     Генерирует JSON-ответ для страницы событий.
 
     Аргументы:
-        date_str (str): Дата в формате 'YYYY-MM-DD HH:MM:SS'.
+        date_str (str): Дата в формате 'YYYY-MM-DD'.
         period (str): Период для фильтрации данных ('W', 'M', 'Y', 'ALL').
 
     Возвращает:
-        HttpResponse: JSON-ответ.
+        str: JSON-ответ.
     """
-    date = datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S')
+    date = datetime.strptime(date_str, '%Y-%m-%d')
     transactions = load_transactions('operations.xlsx')
-
-    # Преобразуем столбец 'Дата операции' в datetime
-    transactions['Дата операции'] = pd.to_datetime(transactions['Дата операции'])
 
     # Фильтруем транзакции на основе периода
     if period == 'W':
@@ -162,8 +154,7 @@ def events_page(date_str: str, period: str = 'M') -> HttpResponse:
         "stock_prices": stock_prices
     }
 
-    json_response = json.dumps(response, ensure_ascii=False, indent=4)
-    return HttpResponse(json_response, content_type='application/json')
+    return json.dumps(response, ensure_ascii=False, indent=4)
 
 def get_expenses(transactions: pd.DataFrame) -> dict:
     """
@@ -206,5 +197,6 @@ def get_income(transactions: pd.DataFrame) -> dict:
         "total_amount": total_amount,
         "main": main_categories.to_dict()
     }
+
 
 

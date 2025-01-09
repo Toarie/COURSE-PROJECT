@@ -11,16 +11,16 @@ class TestFinancialFunctions(unittest.TestCase):
     def test_load_user_settings(self, mock_open):
         mock_file = MagicMock()
         mock_open.return_value.__enter__.return_value = mock_file
-        mock_file.read.return_value = '{"user_currencies": ["USD", "EUR"], "user_stocks": ["AAPL", "GOOG"]}'
+        mock_file.read.return_value = '{"user_currencies": ["USD", "EUR"], "user_stocks": ["AAPL", "GOOGL"]}'
 
         user_settings = load_user_settings('user_settings.json')
-        self.assertEqual(user_settings, {"user_currencies": ["USD", "EUR"], "user_stocks": ["AAPL", "GOOG"]})
+        self.assertEqual(user_settings, {"user_currencies": ["USD", "EUR"], "user_stocks": ["AAPL", "GOOGL"]})
 
     @patch('src.utils.pd.read_excel')
     def test_load_transactions(self, mock_read_excel):
         mock_transactions = pd.DataFrame({
-            'Дата операции': ['01-10-2023 12:00:00', '02-10-2023 12:00:00', '03-10-2023 12:00:00'],
-            'Дата платежа': ['01-10-2023 12:00:00', '02-10-2023 12:00:00', '03-10-2023 12:00:00'],
+            'Дата операции': ['2023-10-01 12:00:00', '2023-10-02 12:00:00', '2023-10-03 12:00:00'],
+            'Дата платежа': ['2023-10-01 12:00:00', '2023-10-02 12:00:00', '2023-10-03 12:00:00'],
             'Номер карты': ['1234', '1234', '5678'],
             'Сумма операции': [100, -50, 200],
             'Категория': ['Еда', 'Транспорт', 'Еда'],
@@ -79,12 +79,12 @@ class TestFinancialFunctions(unittest.TestCase):
 
         mock_user_settings = {
             'user_currencies': ['USD', 'EUR'],
-            'user_stocks': ['AAPL', 'GOOG']
+            'user_stocks': ['AAPL', 'GOOGL']
         }
         mock_load_user_settings.return_value = mock_user_settings
 
         mock_get_currency_rates.return_value = {'USD': 1.0, 'EUR': 0.9}
-        mock_get_stock_prices.return_value = {'AAPL': 150.0, 'GOOG': 2800.0}
+        mock_get_stock_prices.return_value = {'AAPL': 150.0, 'GOOGL': 2800.0}
 
         # Вызываем функцию
         response = home_page('2023-10-03 12:00:00')
@@ -141,12 +141,12 @@ class TestFinancialFunctions(unittest.TestCase):
 
         mock_user_settings = {
             'user_currencies': ['USD', 'EUR'],
-            'user_stocks': ['AAPL', 'GOOG']
+            'user_stocks': ['AAPL', 'GOOGL']
         }
         mock_load_user_settings.return_value = mock_user_settings
 
         mock_get_currency_rates.return_value = {'USD': 1.0, 'EUR': 0.9}
-        mock_get_stock_prices.return_value = {'AAPL': 150.0, 'GOOG': 2800.0}
+        mock_get_stock_prices.return_value = {'AAPL': 150.0, 'GOOGL': 2800.0}
 
         # Вызываем функцию
         response = events_page('2023-10-03', 'M')
