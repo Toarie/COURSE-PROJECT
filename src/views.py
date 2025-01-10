@@ -1,7 +1,7 @@
 import json
 import pandas as pd
 from datetime import datetime
-from src.utils import load_transactions, get_currency_rates, get_stock_prices
+from src.utils import load_transactions, get_currency_rates, get_stock_prices, load_user_settings
 
 def home_page(date_str: str) -> str:
     """
@@ -14,10 +14,10 @@ def home_page(date_str: str) -> str:
         str: JSON-ответ.
     """
     date = datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S')
-    transactions = load_transactions()
+    transactions = load_transactions('operations.xlsx')
 
     # Фильтруем транзакции за текущий месяц
-    start_date = date.replace(day=1)
+    start_date = date.replace(day=1, hour=0, minute=0, second=0)
     filtered_transactions = transactions[(transactions['Дата операции'] >= start_date) & (transactions['Дата операции'] <= date)]
 
     # Приветствие
@@ -30,10 +30,13 @@ def home_page(date_str: str) -> str:
     top_transactions = get_top_transactions(filtered_transactions)
 
     # Курсы валют
-    currency_rates = get_currency_rates()
+    user_settings = load_user_settings('user_settings.json')
+    user_currencies = user_settings.get('user_currencies', [])
+    currency_rates = get_currency_rates(user_currencies)
 
     # Цены на акции
-    stock_prices = get_stock_prices()
+    user_stocks = user_settings.get('user_stocks', [])
+    stock_prices = get_stock_prices(user_stocks)
 
     response = {
         "greeting": greeting,
@@ -43,7 +46,7 @@ def home_page(date_str: str) -> str:
         "stock_prices": stock_prices
     }
 
-    return json.dumps(response, ensure_ascii=False, indent=4)
+    return json.dumps(response, ensure_ascii=False, indent=4, default=str)
 
 def get_greeting(date: datetime) -> str:
     """
@@ -83,8 +86,8 @@ def get_cards_data(transactions: pd.DataFrame) -> list:
         cashback = total_spent * 0.01
         cards_data.append({
             "last_digits": card,
-            "total_spent": total_spent,
-            "cashback": cashback
+            "total_spent": float(total_spent),
+            "cashback": float(cashback)
         })
     return cards_data
 
@@ -99,6 +102,7 @@ def get_top_transactions(transactions: pd.DataFrame) -> list:
         list: Список топ-транзакций.
     """
     top_transactions = transactions.nlargest(5, 'Сумма операции')
+    top_transactions['Дата операции'] = top_transactions['Дата операции'].dt.strftime('%Y-%m-%d %H:%M:%S')
     return top_transactions[['Дата операции', 'Сумма операции', 'Категория', 'Описание']].to_dict(orient='records')
 
 def events_page(date_str: str, period: str = 'M') -> str:
@@ -113,19 +117,19 @@ def events_page(date_str: str, period: str = 'M') -> str:
         str: JSON-ответ.
     """
     date = datetime.strptime(date_str, '%Y-%m-%d')
-    transactions = load_transactions()
+    transactions = load_transactions('operations.xlsx')
 
     # Фильтруем транзакции на основе периода
     if period == 'W':
         start_date = date - pd.Timedelta(days=date.weekday())
     elif period == 'M':
-        start_date = date.replace(day=1)
+        start_date = date.replace(day=1, hour=0, minute=0, second=0)
     elif period == 'Y':
-        start_date = date.replace(month=1, day=1)
+        start_date = date.replace(month=1, day=1, hour=0, minute=0, second=0)
     elif period == 'ALL':
         start_date = transactions['Дата операции'].min()
     else:
-        start_date = date.replace(day=1)
+        start_date = date.replace(day=1, hour=0, minute=0, second=0)
 
     filtered_transactions = transactions[(transactions['Дата операции'] >= start_date) & (transactions['Дата операции'] <= date)]
 
@@ -136,10 +140,13 @@ def events_page(date_str: str, period: str = 'M') -> str:
     income = get_income(filtered_transactions)
 
     # Курсы валют
-    currency_rates = get_currency_rates()
+    user_settings = load_user_settings('user_settings.json')
+    user_currencies = user_settings.get('user_currencies', [])
+    currency_rates = get_currency_rates(user_currencies)
 
     # Цены на акции
-    stock_prices = get_stock_prices()
+    user_stocks = user_settings.get('user_stocks', [])
+    stock_prices = get_stock_prices(user_stocks)
 
     response = {
         "expenses": expenses,
@@ -148,7 +155,7 @@ def events_page(date_str: str, period: str = 'M') -> str:
         "stock_prices": stock_prices
     }
 
-    return json.dumps(response, ensure_ascii=False, indent=4)
+    return json.dumps(response, ensure_ascii=False, indent=4, default=str)
 
 def get_expenses(transactions: pd.DataFrame) -> dict:
     """
@@ -191,3 +198,5 @@ def get_income(transactions: pd.DataFrame) -> dict:
         "total_amount": total_amount,
         "main": main_categories.to_dict()
     }
+
+
