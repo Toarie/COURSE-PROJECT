@@ -46,7 +46,7 @@ def home_page(date_str: str) -> str:
         "stock_prices": stock_prices
     }
 
-    return json.dumps(response, ensure_ascii=False, indent=4)
+    return json.dumps(response, ensure_ascii=False, indent=4, default=str)
 
 def get_greeting(date: datetime) -> str:
     """
@@ -102,6 +102,7 @@ def get_top_transactions(transactions: pd.DataFrame) -> list:
         list: Список топ-транзакций.
     """
     top_transactions = transactions.nlargest(5, 'Сумма операции')
+    top_transactions['Дата операции'] = top_transactions['Дата операции'].dt.strftime('%Y-%m-%d %H:%M:%S')
     return top_transactions[['Дата операции', 'Сумма операции', 'Категория', 'Описание']].to_dict(orient='records')
 
 def events_page(date_str: str, period: str = 'M') -> str:
@@ -154,7 +155,7 @@ def events_page(date_str: str, period: str = 'M') -> str:
         "stock_prices": stock_prices
     }
 
-    return json.dumps(response, ensure_ascii=False, indent=4)
+    return json.dumps(response, ensure_ascii=False, indent=4, default=str)
 
 def get_expenses(transactions: pd.DataFrame) -> dict:
     """
@@ -197,6 +198,5 @@ def get_income(transactions: pd.DataFrame) -> dict:
         "total_amount": total_amount,
         "main": main_categories.to_dict()
     }
-
 
 

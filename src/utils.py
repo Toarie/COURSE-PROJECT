@@ -3,6 +3,10 @@ import pandas as pd
 from datetime import datetime
 import requests
 import os
+from dotenv import load_dotenv
+
+# Загрузка переменных окружения
+load_dotenv()
 
 def load_user_settings(file_path: str) -> dict:
     """
@@ -64,11 +68,11 @@ def get_stock_prices(stocks: list) -> dict:
     base_url = os.getenv('STOCK_API_URL')
     stock_prices = {}
     for stock in stocks:
-        response = requests.get(f'{base_url}?function=TIME_SERIES_INTRADAY&symbol={stock}&interval=1min&apikey={api_key}')
+        response = requests.get(f'{base_url}/time_series?symbol={stock}&interval=1min&apikey={api_key}')
         if response.status_code == 200:
             data = response.json()
-            time_series = data.get('Time Series (1min)', {})
+            time_series = data.get('values', [])
             if time_series:
-                latest_time = sorted(time_series.keys())[0]
-                stock_prices[stock] = float(time_series[latest_time]['1. open'])
+                latest_data = time_series[0]
+                stock_prices[stock] = float(latest_data['open'])
     return stock_prices

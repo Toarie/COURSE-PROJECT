@@ -1,19 +1,27 @@
-import pytest
+import unittest
+from datetime import datetime
 from src.views import home_page, events_page
+import json
 
-def test_home_page():
-    date_str = '2023-10-01 12:00:00'
-    response = home_page(date_str)
-    assert "greeting" in response
-    assert "cards" in response
-    assert "top_transactions" in response
-    assert "currency_rates" in response
-    assert "stock_prices" in response
+class TestViews(unittest.TestCase):
+    def test_home_page(self):
+        date_str = '2023-10-10 12:00:00'
+        response = home_page(date_str)
+        data = json.loads(response)
+        self.assertIn('greeting', data)
+        self.assertIn('cards', data)
+        self.assertIn('top_transactions', data)
+        self.assertIn('currency_rates', data)
+        self.assertIn('stock_prices', data)
 
-def test_events_page():
-    date_str = '2023-10-01'
-    response = events_page(date_str)
-    assert "expenses" in response
-    assert "income" in response
-    assert "currency_rates" in response
-    assert "stock_prices" in response
+    def test_events_page(self):
+        date_str = '2023-10-10'
+        response = events_page(date_str, period='M')
+        data = json.loads(response)
+        self.assertIn('expenses', data)
+        self.assertIn('income', data)
+        self.assertIn('currency_rates', data)
+        self.assertIn('stock_prices', data)
+
+if __name__ == '__main__':
+    unittest.main()
